@@ -5,6 +5,16 @@ KILIX_GAME_KIT_ROOT ?= $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/..)
 KILIX_GAME_KIT_BUILD_DIR ?= $(KILIX_GAME_KIT_ROOT)/build
 KILIX_GAME_KIT_LIB := $(KILIX_GAME_KIT_BUILD_DIR)/libkilix-game-kit.a
 
+# Compatibility path names let existing game Makefiles collapse their vendor
+# object rules incrementally while keeping asset-validation dependencies.
+KITTY_TERMINAL_SESSION_DIR ?= $(KILIX_GAME_KIT_ROOT)/third_party/kitty-terminal-session
+KITTY_FRAMEBUFFER_DIR ?= $(KITTY_TERMINAL_SESSION_DIR)/third_party/kitty-framebuffer
+KITTY_INPUT_DIR ?= $(KITTY_TERMINAL_SESSION_DIR)/third_party/kitty-input
+KITTY_KEYBOARD_DIR ?= $(KITTY_INPUT_DIR)/third_party/kitty_keyboard
+SOFT_RASTER_DIR ?= $(KILIX_GAME_KIT_ROOT)/third_party/soft-raster
+PCM_MIXER_DIR ?= $(KILIX_GAME_KIT_ROOT)/third_party/pcm-mixer
+KILIX_STATE_DIR ?= $(KILIX_GAME_KIT_ROOT)/third_party/kilix-state
+
 KILIX_GAME_KIT_CPPFLAGS := \
 	-I$(KILIX_GAME_KIT_ROOT)/include \
 	-I$(KILIX_GAME_KIT_ROOT)/third_party/kitty-terminal-session/include \
