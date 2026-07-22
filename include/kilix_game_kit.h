@@ -1,0 +1,15 @@
+#ifndef KILIX_GAME_KIT_H
+#define KILIX_GAME_KIT_H
+
+#define KILIX_GAME_KIT_VERSION_MAJOR 0
+#define KILIX_GAME_KIT_VERSION_MINOR 1
+#define KILIX_GAME_KIT_VERSION_PATCH 0
+
+#include "kilix_game_loop.h"
+#include "kilix_state.h"
+#include "kitty_terminal_session.h"
+#include "pcmmix_bank.h"
+#include "pcm_mixer.h"
+#include "soft_raster.h"
+
+#endif
