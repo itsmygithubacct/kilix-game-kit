@@ -24,6 +24,7 @@ WARNINGS := \
 	-Wstrict-prototypes -Wmissing-prototypes -Wformat=2
 CFLAGS ?= -O2 -g
 override CFLAGS += -std=c11 -fPIC -pthread $(WARNINGS)
+DEPFLAGS := -MMD -MP
 LDLIBS := -lz -lpthread -lm
 
 OBJECTS := \
@@ -43,6 +44,7 @@ LIB := $(BUILD_DIR)/lib$(PROJECT).a
 TEST_OBJECT := $(BUILD_DIR)/kilix_game_test.o
 TEST_LIB := $(BUILD_DIR)/libkilix-game-test.a
 TEST_BIN := $(BUILD_DIR)/test-game-kit
+DEPS := $(OBJECTS:.o=.d) $(TEST_OBJECT:.o=.d)
 
 .PHONY: all clean install sanitize test test-deps
 
@@ -52,43 +54,43 @@ $(BUILD_DIR):
 	mkdir -p $@
 
 $(BUILD_DIR)/kilix_game_loop.o: src/kilix_game_loop.c include/kilix_game_loop.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/kilix_game_test.o: src/kilix_game_test.c include/kilix_game_test.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/kitty_terminal_session.o: $(KITTYTS_DIR)/src/kitty_terminal_session.c $(KITTYTS_DIR)/include/kitty_terminal_session.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/kitty_framebuffer.o: $(KITTYFB_DIR)/src/kitty_framebuffer.c $(KITTYFB_DIR)/include/kitty_framebuffer.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/kitty_input.o: $(KITTYIN_DIR)/src/kitty_input.c $(KITTYIN_DIR)/include/kitty_input.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/kitty_input_posix.o: $(KITTYIN_DIR)/src/kitty_input_posix.c $(KITTYIN_DIR)/include/kitty_input_posix.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/kitty_keyboard.o: $(KITTYKB_DIR)/src/kitty_keyboard.c $(KITTYKB_DIR)/include/kitty_keyboard.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/kitty_keyboard_posix.o: $(KITTYKB_DIR)/src/kitty_keyboard_posix.c $(KITTYKB_DIR)/include/kitty_keyboard_posix.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/soft_raster.o: $(RASTER_DIR)/src/soft_raster.c $(RASTER_DIR)/include/soft_raster.h $(RASTER_DIR)/src/font8x16.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/pcm_mixer.o: $(PCMMIX_DIR)/src/pcm_mixer.c $(PCMMIX_DIR)/include/pcm_mixer.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/pcm_wav.o: $(PCMMIX_DIR)/src/pcm_wav.c $(PCMMIX_DIR)/include/pcm_mixer.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/pcmmix_bank.o: $(PCMMIX_DIR)/src/pcmmix_bank.c $(PCMMIX_DIR)/include/pcmmix_bank.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/kilix_state.o: $(STATE_DIR)/src/kilix_state.c $(STATE_DIR)/include/kilix_state.h | $(BUILD_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(LIB): $(OBJECTS)
 	$(AR) rcs $@ $^
@@ -135,3 +137,5 @@ install: all
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+-include $(DEPS)

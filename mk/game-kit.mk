@@ -26,6 +26,30 @@ KILIX_GAME_KIT_CPPFLAGS := \
 	-I$(KILIX_GAME_KIT_ROOT)/third_party/kilix-state/include
 KILIX_GAME_KIT_LDLIBS := -lz -lpthread -lm
 
-$(KILIX_GAME_KIT_LIB):
+# Keep the consumer-facing archive target real (so unchanged applications do
+# not relink on every make invocation), but include every source/header that
+# can affect the embedded archive.  The recursive make then performs the exact
+# object-level dependency check.
+KILIX_GAME_KIT_BUILD_INPUTS := \
+	$(KILIX_GAME_KIT_ROOT)/Makefile \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/include/*.h) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/src/*.c) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/kitty-terminal-session/include/*.h) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/kitty-terminal-session/src/*.c) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/kitty-terminal-session/third_party/kitty-framebuffer/include/*.h) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/kitty-terminal-session/third_party/kitty-framebuffer/src/*.c) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/kitty-terminal-session/third_party/kitty-input/include/*.h) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/kitty-terminal-session/third_party/kitty-input/src/*.c) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/kitty-terminal-session/third_party/kitty-input/third_party/kitty_keyboard/include/*.h) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/kitty-terminal-session/third_party/kitty-input/third_party/kitty_keyboard/src/*.c) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/soft-raster/include/*.h) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/soft-raster/src/*.c) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/soft-raster/src/*.h) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/pcm-mixer/include/*.h) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/pcm-mixer/src/*.c) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/kilix-state/include/*.h) \
+	$(wildcard $(KILIX_GAME_KIT_ROOT)/third_party/kilix-state/src/*.c)
+
+$(KILIX_GAME_KIT_LIB): $(KILIX_GAME_KIT_BUILD_INPUTS)
 	$(MAKE) -C $(KILIX_GAME_KIT_ROOT) \
 		BUILD_DIR=$(KILIX_GAME_KIT_BUILD_DIR) $(KILIX_GAME_KIT_LIB)
