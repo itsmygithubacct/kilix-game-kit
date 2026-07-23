@@ -2,10 +2,39 @@
 
 #include <errno.h>
 #include <poll.h>
+#include <stdio.h>
 #include <pty.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+
+bool kilix_test_cli_dispatch(int argc, char **argv,
+                             const kilix_test_cli_command *commands,
+                             size_t command_count, void *user,
+                             int *exit_code)
+{
+    size_t index;
+    int argument_count;
+    if (!exit_code || argc < 0 || (argc != 0 && !argv) ||
+        (command_count != 0u && !commands)) return false;
+    if (argc < 2 || !argv[1]) return false;
+    argument_count = argc - 2;
+    for (index = 0u; index < command_count; ++index) {
+        const kilix_test_cli_command *command = &commands[index];
+        if (!command->option || !command->run ||
+            strcmp(argv[1], command->option) != 0) continue;
+        if (argument_count < command->minimum_arguments ||
+            (command->maximum_arguments >= 0 &&
+             argument_count > command->maximum_arguments)) {
+            *exit_code = 1;
+            return true;
+        }
+        *exit_code = command->run(user, argument_count,
+                                  (const char *const *)(argv + 2));
+        return true;
+    }
+    return false;
+}
 
 bool kilix_test_pty_open(kilix_test_pty *pty, unsigned short columns,
                          unsigned short rows, unsigned short pixel_width,
@@ -149,4 +178,66 @@ kilix_test_image_diff kilix_test_diff_rgba(const uint8_t *first,
         if (differs) ++result.differing_pixels;
     }
     return result;
+}
+
+void kilix_test_golden_suite_init(kilix_test_golden_suite *suite)
+{
+    if (!suite) return;
+    suite->suite_hash = UINT64_C(14695981039346656037);
+    suite->case_count = 0u;
+    suite->mismatch_count = 0u;
+}
+
+bool kilix_test_golden_add(kilix_test_golden_suite *suite,
+                           const void *bytes, size_t byte_count,
+                           uint64_t expected_hash)
+{
+    uint64_t hash;
+    unsigned int shift;
+    if (!suite || (!bytes && byte_count != 0u)) return false;
+    hash = kilix_test_hash64(bytes, byte_count);
+    for (shift = 0u; shift < 64u; shift += 8u) {
+        suite->suite_hash ^= (uint8_t)(hash >> shift);
+        suite->suite_hash *= UINT64_C(1099511628211);
+    }
+    ++suite->case_count;
+    if (hash != expected_hash) {
+        ++suite->mismatch_count;
+        return false;
+    }
+    return true;
+}
+
+bool kilix_test_golden_finish(const kilix_test_golden_suite *suite,
+                              uint64_t expected_suite_hash)
+{
+    return suite && suite->case_count != 0u && suite->mismatch_count == 0u &&
+           suite->suite_hash == expected_suite_hash;
+}
+
+bool kilix_test_write_ppm_rgba(const char *path, const uint8_t *rgba,
+                               size_t width, size_t height, size_t stride)
+{
+    FILE *stream;
+    size_t row;
+    if (!path || !rgba || width == 0u || height == 0u ||
+        width > SIZE_MAX / 4u || stride < width * 4u ||
+        height > SIZE_MAX / stride) return false;
+    stream = fopen(path, "wb");
+    if (!stream) return false;
+    if (fprintf(stream, "P6\n%zu %zu\n255\n", width, height) < 0) {
+        (void)fclose(stream);
+        return false;
+    }
+    for (row = 0u; row < height; ++row) {
+        const uint8_t *source = rgba + row * stride;
+        size_t column;
+        for (column = 0u; column < width; ++column) {
+            if (fwrite(source + column * 4u, 1u, 3u, stream) != 3u) {
+                (void)fclose(stream);
+                return false;
+            }
+        }
+    }
+    return fclose(stream) == 0;
 }

@@ -10,10 +10,12 @@ stack:
 - `pcm-mixer` and `pcmmix-bank`
 - `kilix-state`
 
-The archive adds only a fixed-step clock with bounded catch-up. A separate
-test archive provides PTY I/O, byte matching, stable FNV-1a hashes, and
+The archive adds a fixed-step clock with bounded catch-up, an optional
+terminal host with reversible signal handling, and a semantic audio runtime
+over `pcm-mixer`. A separate test archive provides PTY I/O, CLI dispatch,
+stable render suites, canonical PPM output, byte matching, hashes, and
 tolerance-aware RGBA diffs. Game-specific rules, controls, art, simulation,
-and sound meaning stay in each game.
+cue meaning, and music-scene meaning stay in each game.
 
 ## Checkout and verify
 
@@ -72,12 +74,44 @@ a permanent “spiral of death.” The clock reports dropped time for diagnostic
 and accepts caller-supplied timestamps, so simulation timing is deterministic
 in tests.
 
+## Runtime host
+
+`kilix_game_host_run()` composes the clock with `kitty-terminal-session`. It
+starts callbacks only after the terminal is active and always unwinds callback
+state, terminal modes, and the previous signal handlers in reverse order.
+SIGINT, SIGTERM, SIGHUP, and SIGQUIT request an orderly stop; SIGPIPE is
+temporarily ignored. Headless mode and a frame limit make the same host usable
+for smoke tests.
+
+Games provide start, ordered-input-event, fixed-step, render, and stop
+callbacks. They retain full ownership of simulation and framebuffer content.
+`kilix_game_event_letter()` replaces the repeated case-insensitive shortcut
+helper in game entry points.
+
+## Semantic audio
+
+`kilix_game_audio` resolves required or optional WAV cue tables from an
+environment override, source root, or installed data root, then owns the
+`pcmmix_bank` and mixer lifecycle. Callers play semantic cue IDs on master,
+SFX, UI, ambience, or music buses. Bus gain can change immediately or fade
+over game time. Music responds while it is active; one-shot and held-voice
+gain is captured when each voice is scheduled, matching the underlying
+handle-based mixer API.
+
+Music-scene tables map game-owned scene IDs to bank samples. Selecting a new
+scene uses `pcm-mixer`'s two-slot crossfade; selecting the current scene only
+retargets volume. A missing optional sink leaves a ready, silent runtime,
+while offline mode runs the exact mixer path in tests.
+
 ## Test helpers
 
 Link `libkilix-game-test.a` with `-lutil` to create fixed-size PTYs and assert
-terminal mode negotiation without a real terminal. `kilix_test_hash64()`
-provides stable binary/golden hashes, while `kilix_test_diff_rgba()` reports
-pixel differences at a selectable per-channel tolerance.
+terminal mode negotiation without a real terminal. The command-table helper
+standardizes `--selftest`-style dispatch. `kilix_test_golden_suite` combines
+per-state hashes into a deterministic suite hash, and
+`kilix_test_write_ppm_rgba()` writes reviewable render artifacts.
+`kilix_test_diff_rgba()` reports pixel differences at a selectable per-channel
+tolerance.
 
 ## License
 

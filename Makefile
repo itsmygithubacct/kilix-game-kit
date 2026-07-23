@@ -29,6 +29,8 @@ LDLIBS := -lz -lpthread -lm
 
 OBJECTS := \
 	$(BUILD_DIR)/kilix_game_loop.o \
+	$(BUILD_DIR)/kilix_game_runtime.o \
+	$(BUILD_DIR)/kilix_game_audio.o \
 	$(BUILD_DIR)/kitty_terminal_session.o \
 	$(BUILD_DIR)/kitty_framebuffer.o \
 	$(BUILD_DIR)/kitty_input.o \
@@ -54,6 +56,12 @@ $(BUILD_DIR):
 	mkdir -p $@
 
 $(BUILD_DIR)/kilix_game_loop.o: src/kilix_game_loop.c include/kilix_game_loop.h | $(BUILD_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/kilix_game_runtime.o: src/kilix_game_runtime.c include/kilix_game_runtime.h include/kilix_game_loop.h | $(BUILD_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/kilix_game_audio.o: src/kilix_game_audio.c include/kilix_game_audio.h | $(BUILD_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/kilix_game_test.o: src/kilix_game_test.c include/kilix_game_test.h | $(BUILD_DIR)
@@ -111,16 +119,19 @@ test-deps:
 	$(MAKE) -C $(PCMMIX_DIR) test
 	$(MAKE) -C $(STATE_DIR) test
 
-sanitize: | $(BUILD_DIR)
+sanitize: $(LIB) | $(BUILD_DIR)
 	$(CC) $(CPPFLAGS) -std=c11 -O1 -g3 -pthread $(WARNINGS) \
 		-fno-omit-frame-pointer -fsanitize=address,undefined \
-		src/kilix_game_loop.c src/kilix_game_test.c tests/test_game_kit.c \
-		-lutil -fsanitize=address,undefined -o $(BUILD_DIR)/test-game-kit-sanitize
+		src/kilix_game_loop.c src/kilix_game_runtime.c \
+		src/kilix_game_audio.c src/kilix_game_test.c tests/test_game_kit.c \
+		$(LIB) $(LDLIBS) -lutil -fsanitize=address,undefined \
+		-o $(BUILD_DIR)/test-game-kit-sanitize
 	ASAN_OPTIONS=detect_leaks=1 $(BUILD_DIR)/test-game-kit-sanitize
 
 install: all
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/include $(DESTDIR)$(PREFIX)/lib
 	$(INSTALL) -m 0644 include/kilix_game_kit.h include/kilix_game_loop.h \
+		include/kilix_game_runtime.h include/kilix_game_audio.h \
 		include/kilix_game_test.h \
 		$(KITTYTS_DIR)/include/kitty_terminal_session.h \
 		$(KITTYFB_DIR)/include/kitty_framebuffer.h \
