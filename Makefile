@@ -41,7 +41,8 @@ OBJECTS := \
 	$(BUILD_DIR)/pcm_mixer.o \
 	$(BUILD_DIR)/pcm_wav.o \
 	$(BUILD_DIR)/pcmmix_bank.o \
-	$(BUILD_DIR)/kilix_state.o
+	$(BUILD_DIR)/kilix_state.o \
+	$(BUILD_DIR)/kilix_state_codec.o
 LIB := $(BUILD_DIR)/lib$(PROJECT).a
 TEST_OBJECT := $(BUILD_DIR)/kilix_game_test.o
 TEST_LIB := $(BUILD_DIR)/libkilix-game-test.a
@@ -100,6 +101,10 @@ $(BUILD_DIR)/pcmmix_bank.o: $(PCMMIX_DIR)/src/pcmmix_bank.c $(PCMMIX_DIR)/includ
 $(BUILD_DIR)/kilix_state.o: $(STATE_DIR)/src/kilix_state.c $(STATE_DIR)/include/kilix_state.h | $(BUILD_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/kilix_state_codec.o: $(STATE_DIR)/src/kilix_state_codec.c \
+		$(STATE_DIR)/include/kilix_state_codec.h | $(BUILD_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+
 $(LIB): $(OBJECTS)
 	$(AR) rcs $@ $^
 
@@ -143,6 +148,7 @@ install: all
 		$(PCMMIX_DIR)/include/pcm_mixer.h \
 		$(PCMMIX_DIR)/include/pcmmix_bank.h \
 		$(STATE_DIR)/include/kilix_state.h \
+		$(STATE_DIR)/include/kilix_state_codec.h \
 		$(DESTDIR)$(PREFIX)/include/
 	$(INSTALL) -m 0644 $(LIB) $(TEST_LIB) $(DESTDIR)$(PREFIX)/lib/
 

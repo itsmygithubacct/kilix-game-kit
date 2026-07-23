@@ -2,6 +2,7 @@
 #include "kilix_game_runtime.h"
 #include "kilix_game_audio.h"
 #include "kilix_game_test.h"
+#include "kilix_state_codec.h"
 
 #include <stdbool.h>
 #include <signal.h>
@@ -69,6 +70,25 @@ static bool test_clock_validation_and_sleep(void)
     CHECK(now >= 0);
     CHECK(kilix_game_sleep_until_ns(now));
     CHECK(!kilix_game_sleep_until_ns(-1));
+    return true;
+}
+
+static bool test_state_codec_embedding(void)
+{
+    uint8_t payload[8];
+    kilixstate_writer writer;
+    kilixstate_reader reader;
+    uint32_t version;
+    int32_t score;
+
+    kilixstate_writer_init(&writer, payload, sizeof payload);
+    CHECK(kilixstate_write_u32(&writer, UINT32_C(3)));
+    CHECK(kilixstate_write_i32(&writer, INT32_C(-42)));
+    CHECK(kilixstate_writer_size(&writer) == sizeof payload);
+    kilixstate_reader_init(&reader, payload, sizeof payload);
+    CHECK(kilixstate_read_u32(&reader, &version) && version == 3u);
+    CHECK(kilixstate_read_i32(&reader, &score) && score == -42);
+    CHECK(kilixstate_reader_require_finished(&reader));
     return true;
 }
 
@@ -288,6 +308,7 @@ static bool test_audio_cli_and_golden(void)
 int main(void)
 {
     if (!test_fixed_step() || !test_clock_validation_and_sleep() ||
+        !test_state_codec_embedding() ||
         !test_pty_and_golden_helpers() ||
         !test_runtime_host_and_signals() ||
         !test_audio_cli_and_golden()) return EXIT_FAILURE;

@@ -17,6 +17,12 @@ stable render suites, canonical PPM output, byte matching, hashes, and
 tolerance-aware RGBA diffs. Game-specific rules, controls, art, simulation,
 cue meaning, and music-scene meaning stay in each game.
 
+The recursively pinned state library also exposes bounded little-endian
+payload readers/writers and migration dispatch through
+`kilix_state_codec.h`. Games retain their schemas and migration logic while
+sharing the overflow, truncation, canonical-boolean, version-selection, and
+zero-padding checks.
+
 ## Checkout and verify
 
 ```sh
